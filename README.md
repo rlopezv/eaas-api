@@ -45,4 +45,7 @@ Herramientas utilizadas para la creación de la API a ofrecer como servicio para
 - openapi-to-plantuml, https://github.com/davidmoten/openapi-to-plantuml
 
 
+# Estado
 
+- [ ] Definición de modelo de información
+- [ ] Definición de operaciones

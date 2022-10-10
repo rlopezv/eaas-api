@@ -1,0 +1,159 @@
+openapi: '3.0.2'
+info:
+  title: Virtual environment as a Service 
+  version: '1.0'
+servers:
+  - url: https://api.server.test/v1
+components:
+  securitySchemes:
+      BasicAuth:
+        type: http
+        scheme: basic
+  # Data model
+  schemas:
+    Workspace:
+      description: "Entorno de trabajo que agrupa diferentes entornos y cagas de trabajo a desplegar"
+      type: object
+      properties:
+        environments: 
+          description: "Describe los entornos asociados al Workspace"
+          type: "array"
+          items:
+            $ref: '#/components/schemas/Environment'
+        workload: 
+          description: "Describe la carga de trabajo a desplegar"
+          type: "array"
+          items:
+            $ref: '#/components/schemas/Workload'
+    Environment:
+      description: "Entorno. Describe un entorno de ejecución"
+      type: object
+    Workload:
+      description: "Carga de trabajo. Describe una carga de trabajo que realiza la implementación de una funcionalidad"
+      type: object
+    Resource:
+      description: "Recurso. Representa un recurso necesario para el despliegue de una carga de trabajo"
+      type: object
+    Host:
+      allOf:     # Combina resource
+        - $ref: '#/components/schemas/Resource'
+        - type: object
+      properties:
+        objectType:
+          type: string
+    Network:
+      allOf:     # Combina Resource
+        - $ref: '#/components/schemas/Resource'
+        - type: object
+    Intance:
+      description: "Representa una instanciación de un recurso"
+      oneOf:
+        - $ref: '#/components/schemas/Host'
+        - $ref: '#/components/schemas/Network'    
+      discriminator:
+              propertyName: objectType
+    Provider:
+      description: "Representa a los proveedores responsables de implementar la gestión de un entorno"
+      type: object
+  responses:
+      400Error:
+        description: Invalid request
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                message:
+                  type: string
+paths:
+  /environment:
+    description: "Representa la creación entorno"
+    post:
+      requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                #  ----- Added line  ----------------------------------------
+                $ref: '#/components/schemas/Environment'
+                #  ---- /Added line  ----------------------------------------
+      responses:
+        '200':
+          description: OK
+      tags:
+        - "environment"
+  /environment/{environmentId}/plan:
+    description: "Realiza la planificación de la creación de un entorno"
+    parameters:
+      - name: environmentId
+        description: "Identificador del entorno"
+        in: path
+        required: true
+        schema:
+          type: string    
+    post:
+      requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                #  ----- Added line  ----------------------------------------
+                $ref: '#/components/schemas/Environment'
+                #  ---- /Added line  ----------------------------------------
+      responses:
+        '200':
+          description: OK
+      tags:
+        - "environment"
+  /environment/{environmentId}:
+    description: "Recuperación del estado asociado a un entorno"
+    parameters:
+      - name: environmentId
+        description: "Identificador del entorno"
+        in: path
+        required: true
+        schema:
+          type: string    
+    get:
+      responses:
+        '200':
+          description: OK
+      tags:
+        - "environment"      
+    put:
+      requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                #  ----- Added line  ----------------------------------------
+                $ref: '#/components/schemas/Environment'
+                #  ---- /Added line  ----------------------------------------
+      responses:
+        '200':
+          description: OK
+      tags:
+        - "environment"
+    patch:
+      description: "Permite la actualización de un entorno"
+      requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                #  ----- Added line  ----------------------------------------
+                $ref: '#/components/schemas/Environment'
+                #  ---- /Added line  ----------------------------------------
+      responses:
+        '200':
+          description: OK
+      tags:
+        - "environment"
+    delete:
+      responses:
+        '200':
+          description: OK
+      tags:
+        - "environment"
+
+
