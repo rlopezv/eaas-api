@@ -11,29 +11,200 @@ components:
         scheme: basic
   # Data model
   schemas:
+    StatusType:
+      description: "Tipo enum para describir estados"
+      type: string
+      enum:
+        - "ok"
+        - "ko"
+    WorkloadType:
+      description: "Tipo enum para describir tipo de carga de trabajo"
+      type: string
+      enum:
+        - "service"
+        - "other"
+    SoftwareType:
+      description: "Tipo enum para describir tipos de software"
+      type: string
+      enum:
+        - "database"
+        - "application"
+        - "other"
+    SoftwareContentType:
+      description: "Tipo enum para describir tipos descriptores utilizados para software"
+      type: string
+      enum:
+        - "script"
+        - "container"
+        - "other"
     Workspace:
       description: "Entorno de trabajo que agrupa diferentes entornos y cagas de trabajo a desplegar"
       type: object
       properties:
+        created:
+          type: string
+          format: date-time          
+        modified:
+          type: string
+          format: date-time          
+        version:
+          type: integer
         environments: 
           description: "Describe los entornos asociados al Workspace"
           type: "array"
           items:
             $ref: '#/components/schemas/Environment'
-        workload: 
+        workloads: 
           description: "Describe la carga de trabajo a desplegar"
           type: "array"
           items:
             $ref: '#/components/schemas/Workload'
+        deployments:
+          description: "Establece la relación de entornos y cargas de trabajo"
+          type: "array"
+          items:
+            $ref: '#/components/schemas/Deployment'
     Environment:
       description: "Entorno. Describe un entorno de ejecución"
       type: object
+      properties:
+        id:
+          description: "Identificador único"
+          type: string
+        code:
+          description: "Código"
+          type: string
+        name:
+          description: "Nombre asociado"
+          type: string
+        spec:
+          description: "Especificación. Dependiente de la implementación"
+          type: object
+        resources: 
+          description: "Recursos requeridos para la creación del entorno"
+          type: "array"
+          items:
+            $ref: '#/components/schemas/EnvironmentItem'
+        created:
+          type: string
+          format: date-time          
+        modified:
+          type: string
+          format: date-time          
+        version:
+          type: integer
+        status:
+          description: "Describe el estado del elemento"
+          $ref: '#/components/schemas/StatusType'
+
+
     Workload:
       description: "Carga de trabajo. Describe una carga de trabajo que realiza la implementación de una funcionalidad"
       type: object
-    Resource:
-      description: "Recurso. Representa un recurso necesario para el despliegue de una carga de trabajo"
+      properties:
+        id:
+          description: "Identificador único"
+          type: string
+        code:
+          description: "Código"
+          type: string
+        name:
+          description: "Nombre asociado"
+          type: string
+        type:
+          $ref: '#/components/schemas/WorkloadType'
+        spec:
+          description: "Especificación. Dependiente de la implementación"
+          type: object
+        created:
+          type: string
+          format: date-time          
+        modified:
+          type: string
+          format: date-time          
+        version:
+          type: integer
+        status:
+          type: object # Será necesario definir cómo representar el estado
+
+    WorkloadItem:
+      description: "Elemento que forma parte de una carga de trabajo"
       type: object
+      properties:
+        created:
+          type: string
+          format: date-time          
+        modified:
+          type: string
+          format: date-time          
+        version:
+          type: integer
+        status:
+          type: object # Será necesario definir cómo representar el estado
+        workload:
+          description: "Carga de trabajo a la que pertenece elemento"
+          $ref: '#/components/schemas/Workload'
+        objectType:
+          description: "Tipo de elemento"
+          $ref: '#/components/schemas/SoftwareType'
+        spec:
+          description: "Descriptor asociado"
+          $ref: '#/components/schemas/WorkloadItemDescriptor'
+      discriminator:
+        propertyName: objectType
+
+    WorkloadItemDescriptor:
+      description: "Descriptor asociado a un elemento"
+      type: object
+      properties:
+        created:
+          type: string
+          format: date-time          
+        modified:
+          type: string
+          format: date-time          
+        version:
+          type: integer
+        status:
+          type: object # Será necesario definir cómo representar el estado
+        objectType:
+          description: "Tipo de descriptor"
+          $ref: '#/components/schemas/SoftwareContentType'
+
+    EnvironmentItem:
+      description: "Elemento perteneciente a un entorno"
+      type: object
+      properties:
+        created:
+          type: string
+          format: date-time          
+        modified:
+          type: string
+          format: date-time          
+        version:
+          type: integer
+        status:
+          type: object # Será necesario definir cómo representar el estado
+        objectType:
+          type: string # Debería ser un enum para limitar los tipos
+      oneOf:
+        - $ref: '#/components/schemas/ResourceGroup'
+        - $ref: '#/components/schemas/Resource'    
+      discriminator:
+        propertyName: objectType
+
+    ResourceGroup:
+      description: "Identifica un grupo de entidades (resources) gestionados en el contexto de un entorno (entorno)"
+      type: object
+      properties:
+        parent:
+          description: "Para mantener relaciones de pertenencia"
+          $ref: '#/components/schemas/ResourceGroup'
+
+    Resource:
+      description: "Recurso. Representa un recurso físico o virtual necesario para el despliegue de una carga de trabajo"
+      type: object
+
     Host:
       allOf:     # Combina resource
         - $ref: '#/components/schemas/Resource'
@@ -45,16 +216,29 @@ components:
       allOf:     # Combina Resource
         - $ref: '#/components/schemas/Resource'
         - type: object
-    Intance:
+    Instance:
       description: "Representa una instanciación de un recurso"
       oneOf:
         - $ref: '#/components/schemas/Host'
         - $ref: '#/components/schemas/Network'    
       discriminator:
-              propertyName: objectType
+        propertyName: objectType
     Provider:
       description: "Representa a los proveedores responsables de implementar la gestión de un entorno"
       type: object
+    Deployment:
+      description: "Establece la relación entre un entorno de despligue y la carga de trabajo correspondiente"
+      type: object
+      properties:
+        environment:
+          $ref: '#/components/schemas/Environment'
+        workload:
+          $ref: '#/components/schemas/Workload'
+      example:
+        environment:
+          id: "id"
+        workload:
+          id: "id"
   responses:
       400Error:
         description: Invalid request
@@ -67,7 +251,7 @@ components:
                   type: string
 paths:
   /environment:
-    description: "Representa la creación entorno"
+    description: "Permite la creación entorno"
     post:
       requestBody:
           required: true
