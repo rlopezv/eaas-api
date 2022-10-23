@@ -1,0 +1,233 @@
+@startuml
+hide <<Path>> circle
+hide <<Response>> circle
+hide <<Parameter>> circle
+hide empty methods
+hide empty fields
+set namespaceSeparator none
+
+enum "StatusType" {
+  ok
+  ko
+}
+
+enum "WorkloadType" {
+  service
+  other
+}
+
+enum "SoftwareType" {
+  database
+  application
+  other
+}
+
+enum "SoftwareContentType" {
+  script
+  container
+  other
+}
+
+enum "ServiceType" {
+  workload
+  external
+}
+
+class "Configuration" {
+}
+
+class "ResourceGroup" {
+}
+
+class "Resource" {
+}
+
+class "Environment.spec" {
+}
+
+class "Environment" {
+  {field} id : string {O}
+  {field} code : string {O}
+  {field} name : string {O}
+  {field} created : timestamp {O}
+  {field} modified : timestamp {O}
+  {field} version : integer {O}
+}
+
+class "EnvironmentItem" {
+}
+
+class "Provider" {
+}
+
+class "Software.status" {
+}
+
+class "Software" {
+  {field} created : timestamp {O}
+  {field} modified : timestamp {O}
+  {field} version : integer {O}
+}
+
+class "SoftwareLocation.uri" {
+}
+
+class "SoftwareLocation" {
+}
+
+class "SoftwareDescriptor.status" {
+}
+
+class "SoftwareDescriptor" {
+  {field} created : timestamp {O}
+  {field} modified : timestamp {O}
+  {field} version : integer {O}
+}
+
+class "Workload.spec" {
+}
+
+class "Workload.status" {
+}
+
+class "Workload" {
+  {field} id : string {O}
+  {field} code : string {O}
+  {field} name : string {O}
+  {field} created : timestamp {O}
+  {field} modified : timestamp {O}
+  {field} version : integer {O}
+}
+
+class "WorkloadInstance" {
+}
+
+class "Service" {
+}
+
+class "ExternalService.1" {
+}
+
+class "ExternalService" {
+}
+
+class "WorkloadService.1" {
+}
+
+class "WorkloadService" {
+}
+
+class "Host" {
+}
+
+class "PhysicalHost" {
+}
+
+class "VirtualHost" {
+}
+
+class "HostDescriptor.spec" {
+}
+
+class "HostDescriptor" {
+}
+
+class "Instance" {
+}
+
+class "Workspace" {
+  {field} created : timestamp {O}
+  {field} modified : timestamp {O}
+  {field} version : integer {O}
+}
+
+class "Deployment" {
+}
+
+"ResourceGroup" --|> "Configuration"
+
+"Resource" --|> "Configuration"
+
+"ResourceGroup" --> "0..1" "ResourceGroup"  :  "parent"
+
+"Resource" --> "0..1" "ResourceGroup"  :  "resourceGroup"
+
+"Environment" --> "0..1" "Environment.spec"  :  "spec"
+
+"Environment" --> "*" "EnvironmentItem"  :  "resources"
+
+"Environment" --> "0..1" "StatusType"  :  "status"
+
+"EnvironmentItem" --> "*" "EnvironmentItem"  :  "resources"
+
+"EnvironmentItem" --> "0..1" "Provider"  :  "provider"
+
+"EnvironmentItem" --> "0..1" "StatusType"  :  "status"
+
+"Software" --> "0..1" "Software.status"  :  "status"
+
+"Software" --> "0..1" "SoftwareLocation"  :  "location"
+
+"Software" --> "0..1" "Workload"  :  "workload"
+
+"Software" --> "0..1" "SoftwareType"  :  "objectType"
+
+"Software" --> "0..1" "SoftwareDescriptor"  :  "spec"
+
+"SoftwareLocation" --> "0..1" "SoftwareLocation.uri"  :  "uri"
+
+"SoftwareDescriptor" --> "0..1" "SoftwareDescriptor.status"  :  "status"
+
+"SoftwareDescriptor" --> "0..1" "SoftwareContentType"  :  "objectType"
+
+"Workload" --> "0..1" "WorkloadType"  :  "type"
+
+"Workload" --> "0..1" "Workload.spec"  :  "spec"
+
+"Workload" --> "0..1" "Workload.status"  :  "status"
+
+"WorkloadInstance" --> "0..1" "Workload"  :  "workload"
+
+"WorkloadInstance" --> "0..1" "Software"  :  "software"
+
+"WorkloadInstance" --> "0..1" "Environment"  :  "environment"
+
+"WorkloadInstance" --> "0..1" "WorkloadService"  :  "service"
+
+"Service" --> "0..1" "ServiceType"  :  "objectType"
+
+"Service" --> "0..1" "Service"  :  "services"
+
+"ExternalService.1" --> "0..1" "EnvironmentItem"  :  "provider"
+
+"ExternalService" --> "1" "Service"
+
+"ExternalService" --> "1" "ExternalService.1"
+
+"WorkloadService.1" --> "0..1" "Software"  :  "provider"
+
+"WorkloadService" --> "1" "Service"
+
+"WorkloadService" --> "1" "WorkloadService.1"
+
+"PhysicalHost" --|> "Host"
+
+"VirtualHost" --|> "Host"
+
+"HostDescriptor" --> "0..1" "HostDescriptor.spec"  :  "spec"
+
+"Instance" --> "0..1" "Host"  :  "host"
+
+"Instance" --> "0..1" "EnvironmentItem"  :  "allocated"
+
+"Workspace" --> "*" "Environment"  :  "environments"
+
+"Workspace" --> "*" "Workload"  :  "workloads"
+
+"Workspace" --> "*" "Deployment"  :  "deployments"
+
+"Deployment" --> "0..1" "Environment"  :  "environment"
+
+"Deployment" --> "0..1" "Workload"  :  "workload"
+
+@enduml
