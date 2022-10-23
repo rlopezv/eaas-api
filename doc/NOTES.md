@@ -79,4 +79,5 @@ Se describen varios "dominios":
             - Memory
             - Disk
 
-¿Servicios externos? Productos requeridos
+Servicios externos? Servicios requeridos cuando no dependen de la implementación. Modelados como servicios dentro de la estructura.
+Un producto puede ser un servicio?

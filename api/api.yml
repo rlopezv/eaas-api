@@ -11,6 +11,7 @@ components:
         scheme: basic
   # Data model
   schemas:
+    ## Enumerations
     StatusType:
       description: "Tipo enum para describir estados"
       type: string
@@ -37,142 +38,18 @@ components:
         - "script"
         - "container"
         - "other"
-    Workspace:
-      description: "Entorno de trabajo que agrupa diferentes entornos y cagas de trabajo a desplegar"
-      type: object
-      properties:
-        created:
-          type: string
-          format: date-time          
-        modified:
-          type: string
-          format: date-time          
-        version:
-          type: integer
-        environments: 
-          description: "Describe los entornos asociados al Workspace"
-          type: "array"
-          items:
-            $ref: '#/components/schemas/Environment'
-        workloads: 
-          description: "Describe la carga de trabajo a desplegar"
-          type: "array"
-          items:
-            $ref: '#/components/schemas/Workload'
-        deployments:
-          description: "Establece la relación de entornos y cargas de trabajo"
-          type: "array"
-          items:
-            $ref: '#/components/schemas/Deployment'
-    Environment:
-      description: "Entorno. Describe un entorno de ejecución"
-      type: object
-      properties:
-        id:
-          description: "Identificador único"
-          type: string
-        code:
-          description: "Código"
-          type: string
-        name:
-          description: "Nombre asociado"
-          type: string
-        spec:
-          description: "Especificación. Dependiente de la implementación"
-          type: object
-        resources: 
-          description: "Recursos requeridos para la creación del entorno"
-          type: "array"
-          items:
-            $ref: '#/components/schemas/EnvironmentItem'
-        created:
-          type: string
-          format: date-time          
-        modified:
-          type: string
-          format: date-time          
-        version:
-          type: integer
-        status:
-          description: "Describe el estado del elemento"
-          $ref: '#/components/schemas/StatusType'
+    ServiceType:
+      description: "Tipo enum para describir tipos servicios disponibles"
+      type: string
+      enum:
+        - "workload"
+        - "external"
 
+    ## Core
 
-    Workload:
-      description: "Carga de trabajo. Describe una carga de trabajo que realiza la implementación de una funcionalidad"
-      type: object
-      properties:
-        id:
-          description: "Identificador único"
-          type: string
-        code:
-          description: "Código"
-          type: string
-        name:
-          description: "Nombre asociado"
-          type: string
-        type:
-          $ref: '#/components/schemas/WorkloadType'
-        spec:
-          description: "Especificación. Dependiente de la implementación"
-          type: object
-        created:
-          type: string
-          format: date-time          
-        modified:
-          type: string
-          format: date-time          
-        version:
-          type: integer
-        status:
-          type: object # Será necesario definir cómo representar el estado
-
-    WorkloadItem:
-      description: "Elemento que forma parte de una carga de trabajo"
-      type: object
-      properties:
-        created:
-          type: string
-          format: date-time          
-        modified:
-          type: string
-          format: date-time          
-        version:
-          type: integer
-        status:
-          type: object # Será necesario definir cómo representar el estado
-        workload:
-          description: "Carga de trabajo a la que pertenece elemento"
-          $ref: '#/components/schemas/Workload'
-        objectType:
-          description: "Tipo de elemento"
-          $ref: '#/components/schemas/SoftwareType'
-        spec:
-          description: "Descriptor asociado"
-          $ref: '#/components/schemas/WorkloadItemDescriptor'
-      discriminator:
-        propertyName: objectType
-
-    WorkloadItemDescriptor:
-      description: "Descriptor asociado a un elemento"
-      type: object
-      properties:
-        created:
-          type: string
-          format: date-time          
-        modified:
-          type: string
-          format: date-time          
-        version:
-          type: integer
-        status:
-          type: object # Será necesario definir cómo representar el estado
-        objectType:
-          description: "Tipo de descriptor"
-          $ref: '#/components/schemas/SoftwareContentType'
-
-    EnvironmentItem:
-      description: "Elemento perteneciente a un entorno"
+    ## Debe referenciar un scope de aplicación
+    Configuration:
+      description: "Elemento perteneciente a un entorno que mantiene información requerida sobre su identificadión"
       type: object
       properties:
         created:
@@ -204,28 +81,279 @@ components:
     Resource:
       description: "Recurso. Representa un recurso físico o virtual necesario para el despliegue de una carga de trabajo"
       type: object
-
-    Host:
-      allOf:     # Combina resource
-        - $ref: '#/components/schemas/Resource'
-        - type: object
       properties:
-        objectType:
+        resourceGroup:
+          description: "Para mantener relaciones de pertenencia"
+          $ref: '#/components/schemas/ResourceGroup'
+
+    ## Environment      
+    Environment:
+      description: "Define un ámbito de aplicación"
+      type: object
+      properties:
+        id:
+          description: "Identificador único"
           type: string
-    Network:
-      allOf:     # Combina Resource
-        - $ref: '#/components/schemas/Resource'
-        - type: object
-    Instance:
-      description: "Representa una instanciación de un recurso"
-      oneOf:
-        - $ref: '#/components/schemas/Host'
-        - $ref: '#/components/schemas/Network'    
-      discriminator:
-        propertyName: objectType
+        code:
+          description: "Código"
+          type: string
+        name:
+          description: "Nombre asociado"
+          type: string
+        spec:
+          description: "Especificación. Dependiente de la implementación"
+          type: object
+        resources: 
+          description: "Recursos requeridos para la creación del entorno"
+          type: "array"
+          items:
+            $ref: '#/components/schemas/EnvironmentItem'
+        created:
+          type: string
+          format: date-time          
+        modified:
+          type: string
+          format: date-time          
+        version:
+          type: integer
+        status:
+          description: "Describe el estado del elemento"
+          $ref: '#/components/schemas/StatusType'
+
+    EnvironmentItem:
+      description: "Entorno. Describe un elemento de un entorno de ejecución"
+      type: object
+      properties:
+        resources: 
+          description: "Recursos requeridos para la creación del entorno"
+          type: "array"
+          items:
+            $ref: '#/components/schemas/EnvironmentItem'
+        provider:
+          description: "Responsable de implementacón del entorno"
+          $ref: '#/components/schemas/Provider'
+        status:
+          description: "Describe el estado del elemento"
+          $ref: '#/components/schemas/StatusType'
+
     Provider:
       description: "Representa a los proveedores responsables de implementar la gestión de un entorno"
       type: object
+
+
+    ## Software
+    Software:
+      description: "Elemento que representa una implementación"
+      ### Todos deben heredar de Configuracion
+      # allOf:
+      #   - $ref: '#/components/schemas/Configuration'      
+      type: object
+      properties:
+        created:
+          type: string
+          format: date-time          
+        modified:
+          type: string
+          format: date-time          
+        version:
+          type: integer
+        status:
+          type: object # Será necesario definir cómo representar el estado
+        location:
+          description: "Carga de trabajo a la que pertenece elemento"
+          $ref: '#/components/schemas/SoftwareLocation'
+        workload:
+          description: "Carga de trabajo a la que pertenece elemento"
+          $ref: '#/components/schemas/Workload'
+        objectType:
+          description: "Tipo de elemento"
+          $ref: '#/components/schemas/SoftwareType'
+        spec:
+          description: "Descriptor asociado"
+          $ref: '#/components/schemas/SoftwareDescriptor'
+      discriminator:
+        propertyName: objectType
+
+    SoftwareLocation:
+      description: "Lugar donde está disponible el código fuente asociado"
+      type: object
+      properties:
+        uri:
+          # De permitir obtener el elemento (repositorio/registro de artefactos)
+          type: object
+
+    SoftwareDescriptor:
+      description: "Descriptor asociado a un elemento"
+      type: object
+      properties:
+        created:
+          type: string
+          format: date-time          
+        modified:
+          type: string
+          format: date-time          
+        version:
+          type: integer
+        status:
+          type: object # Será necesario definir cómo representar el estado
+        objectType:
+          description: "Tipo de descriptor"
+          $ref: '#/components/schemas/SoftwareContentType'
+
+
+    ## Workload Business Product
+    Workload:
+      description: "Carga de trabajo. Describe una carga de trabajo que implementa la funcionalidad requerida"
+      type: object
+      properties:
+        id:
+          description: "Identificador único"
+          type: string
+        code:
+          description: "Código"
+          type: string
+        name:
+          description: "Nombre asociado"
+          type: string
+        type:
+          $ref: '#/components/schemas/WorkloadType'
+        spec:
+          description: "Especificación. Dependiente de la implementación"
+          type: object
+        created:
+          type: string
+          format: date-time          
+        modified:
+          type: string
+          format: date-time          
+        version:
+          type: integer
+        status:
+          type: object # Será necesario definir cómo representar el estado
+
+    ## Hay que establecer las relaciones existentes entre componente y despligue
+    WorkloadInstance:
+      description: "Representa una instanciación de una carga de trabajo"
+      type: object
+      properties:
+        workload:
+          description: "Carga de trabajo que instancia"
+          $ref: '#/components/schemas/Workload'  
+        software:
+          description: "Entorno en el que se instala la instancia"
+          $ref: '#/components/schemas/Software'
+        environment:
+          description: "Entorno en el que se instala la instancia"
+          $ref: '#/components/schemas/Environment'
+        ## Podrían ser varios?
+        service:
+          description: "Servicio proporcionado"
+          $ref: '#/components/schemas/WorkloadService'
+
+
+    ## Services
+    Service:
+      description: "Describe un servicio, implementado por una instancia de workload o externo"
+      properties:
+        objectType:
+          description: "Tipo de descriptor"
+          $ref: '#/components/schemas/ServiceType'
+        services:
+          description: "Servicios a los que referencia"
+          $ref: '#/components/schemas/Service'
+    
+    ExternalService:
+      description: "Describe un servicio, implementado por una instancia de workload o externo"
+      allOf:
+        - $ref: '#/components/schemas/Service'
+        - type: object
+          properties:
+            provider:
+              description: "Describe la descripción del entorno para soportar el servicio"
+              $ref: '#/components/schemas/EnvironmentItem'
+
+    WorkloadService:
+      description: "Describe un servicio, implementado por el software asociado a una carga de trabajo"
+      allOf:
+        - $ref: '#/components/schemas/Service'
+        - type: object
+          properties:
+            provider:
+              description: "Describe la descripción del entorno para soportar el servicio"
+              $ref: '#/components/schemas/Software'
+
+    ## Hardware
+    Host:
+      description: "Representa un elemento donde se va a realizar el despliegue del servicio"
+      type: object
+      properties:
+        disk:
+          type: object
+        network:
+          type: object
+        architecture:
+          ## Imporntante para seleccionar quien lo puede implementar
+          type: object          
+        objectType:
+          type: string
+      oneOf:
+        - $ref: '#/components/schemas/PhysicalHost'
+        - $ref: '#/components/schemas/VirtualHost'    
+    PhysicalHost:
+      description: "Representa un anfitrión físico"
+    VirtualHost:
+      description: "Representa un anfitrión virtual"
+    HostDescriptor:
+      description: "Establece la especificación requiera para el host a crear"
+      type: object
+      properties:
+        spec: 
+          description: "Establece la especificación requiera para el host a crear"
+          type: object
+    Instance:
+      description: "Representa una instanciación de un recurso"
+      properties:
+        host:
+          $ref: '#/components/schemas/Host'
+        allocated:
+          $ref: '#/components/schemas/EnvironmentItem'
+      discriminator:
+        propertyName: objectType
+
+    ## Infrastructure
+    ## Se podría modelar la infra propia si va en baremetal
+
+
+    ## Entorno de trabajo
+    Workspace:
+      description: "Entorno de trabajo que agrupa diferentes entornos y cagas de trabajo a desplegar"
+      type: object
+      properties:
+        created:
+          type: string
+          format: date-time          
+        modified:
+          type: string
+          format: date-time          
+        version:
+          type: integer
+        environments: 
+          description: "Describe los entornos asociados al Workspace"
+          type: "array"
+          items:
+            $ref: '#/components/schemas/Environment'
+        workloads: 
+          description: "Describe la carga de trabajo a desplegar"
+          type: "array"
+          items:
+            $ref: '#/components/schemas/Workload'
+        deployments:
+          description: "Establece la relación de entornos y cargas de trabajo"
+          type: "array"
+          items:
+            $ref: '#/components/schemas/Deployment'
+
+    ## Despliegue
     Deployment:
       description: "Establece la relación entre un entorno de despligue y la carga de trabajo correspondiente"
       type: object
@@ -239,6 +367,7 @@ components:
           id: "id"
         workload:
           id: "id"
+
   responses:
       400Error:
         description: Invalid request
